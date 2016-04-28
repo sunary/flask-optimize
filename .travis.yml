@@ -1,0 +1,19 @@
+language: python
+
+python:
+  - "2.6"
+  - "2.7"
+
+before_install:
+  - pip install --upgrade pip --quiet
+
+install: true
+
+before_script:
+  - pyclean --verbose .
+
+script:
+  - python flask_optimize.py
+
+notifications:
+  email: false
