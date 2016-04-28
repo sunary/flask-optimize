@@ -35,7 +35,7 @@ setup(
     maintainer='Sunary [Nhat Vo Van]',
     maintainer_email='v2nhat@gmail.com',
     description='Flask optimization: cache, minify html and gzip response',
-    license=license,
+    license='MIT',
     keywords='flask, optimize, cache, minify html, gzip',
     url='https://github.com/sunary/flask-optimize',
     packages=find_packages(exclude=['docs', 'tests*']),
