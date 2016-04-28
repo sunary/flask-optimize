@@ -1,3 +1,5 @@
+sudo: false
+
 language: python
 
 python:
@@ -9,7 +11,8 @@ python:
 before_install:
   - pip install --upgrade pip --quiet
 
-install: true
+install:
+  - pip install -r requirements.txt
 
 before_script:
   - pyclean --verbose .
