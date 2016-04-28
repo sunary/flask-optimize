@@ -4,9 +4,13 @@ __author__ = 'sunary'
 from htmlmin.main import minify
 from flask import request, Response, make_response, current_app, redirect
 from functools import update_wrapper
-from cStringIO import StringIO as IO
 import gzip
 import time
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 
 class FlaskOptimize(object):
@@ -148,7 +152,7 @@ class FlaskOptimize(object):
             content = content.encode('utf8')
 
         resp = Response()
-        gzip_buffer = IO()
+        gzip_buffer = StringIO()
         gzip_file = gzip.GzipFile(mode='wb', fileobj=gzip_buffer)
         gzip_file.write(content)
         gzip_file.close()
