@@ -24,9 +24,6 @@ with open('CHANGES.md') as fo:
 
 version = '0.1.{0}'.format(build)
 
-install_reqs = parse_requirements('requirements.txt', session=False)
-reqs = [str(ir.req) for ir in install_reqs]
-
 setup(
     name='flask-optimize',
     version=version,
@@ -34,11 +31,13 @@ setup(
     author_email='v2nhat@gmail.com',
     maintainer='Sunary [Nhat Vo Van]',
     maintainer_email='v2nhat@gmail.com',
+    platforms='any',
     description='Flask optimization: cache, minify html and gzip response',
     license='MIT',
     keywords='flask, optimize, cache, minify html, gzip',
     url='https://github.com/sunary/flask-optimize',
     packages=find_packages(exclude=['docs', 'tests*']),
-    install_requires=reqs,
+    install_requires=['Flask>=0.10.1',
+                      'htmlmin>=0.1.10'],
     entry_points={},
 )
