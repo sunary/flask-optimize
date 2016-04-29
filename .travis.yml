@@ -19,6 +19,7 @@ before_script:
 
 script:
   - python flask_optimize/__init__.py
+  - python test/flask_app.py
 
 notifications:
   email: false
