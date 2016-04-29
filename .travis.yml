@@ -13,6 +13,7 @@ before_install:
 
 install:
   - pip install -r requirements.txt
+  - pip install flask-optimize
 
 before_script:
   - pyclean --verbose .
