@@ -18,7 +18,7 @@ before_script:
   - pyclean --verbose .
 
 script:
-  - python flask_optimize.py
+  - python flask_optimize/__init__.py
 
 notifications:
   email: false
