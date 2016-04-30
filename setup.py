@@ -39,5 +39,13 @@ setup(
     packages=find_packages(exclude=['docs', 'tests*']),
     install_requires=['Flask>=0.10.1',
                       'htmlmin>=0.1.10'],
-    entry_points={},
+    classifiers=[
+        'Environment :: Web Environment',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+        'Topic :: Software Development :: Libraries :: Python Modules'
+    ]
 )
