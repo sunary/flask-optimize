@@ -2,7 +2,7 @@ __author__ = 'sunary'
 
 
 from htmlmin.main import minify
-from flask import request, Response, make_response, current_app, redirect
+from flask import request, Response, make_response, current_app, redirect, json
 from functools import update_wrapper
 import gzip
 import time
@@ -168,6 +168,7 @@ class FlaskOptimize(object):
     def crossdomain(content):
         ''' create Cross-site HTTP requests
         '''
+        content = json.jsonify(content)
         resp = make_response(content)
         h = resp.headers
 
