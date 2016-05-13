@@ -79,19 +79,17 @@ class FlaskOptimize(object):
                 # limit by ip
                 if limit_arg and self.redis:
                     limit_key = request.remote_addr
-                    ban_key = 'ban' + limit_key
+                    ban_key = 'ban_' + limit_key
 
-                    times_requested = self.redis.get(limit_key) or '0'
-                    if int(times_requested) >= limit_arg[0] or (limit_arg[2] and self.redis.get(ban_key)):
-                        if int(times_requested) >= limit_arg[0]:
+                    times_requested = int(self.redis.get(limit_key) or '0')
+                    if times_requested >= limit_arg[0] or (limit_arg[2] and self.redis.get(ban_key)):
+                        if times_requested >= limit_arg[0]:
                             self.redis.set(ban_key, 1)
                             self.redis.expire(ban_key, limit_arg[2])
 
                         return self.crossdomain({'status_code': 429})
-                    elif times_requested:
-                        self.redis.incr(limit_key, 1)
                     else:
-                        self.redis.set(limit_key, 1)
+                        self.redis.incr(limit_key, 1)
                         self.redis.expire(limit_key, limit_arg[1])
 
                 # redirect new host
