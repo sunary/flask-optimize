@@ -139,7 +139,6 @@ class FlaskOptimize(object):
 
     @staticmethod
     def validate(method, content):
-        print method
         if isinstance(content, (str, unicode)):
             return method(content)
         elif isinstance(content, tuple):
