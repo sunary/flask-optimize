@@ -2,7 +2,7 @@ __author__ = 'sunary'
 
 
 from htmlmin.main import minify
-from flask import request, Response, make_response, current_app, redirect, json
+from flask import request, Response, make_response, current_app, redirect, json, wrappers
 from functools import update_wrapper
 import gzip
 import time
@@ -26,7 +26,7 @@ class FlaskOptimize(object):
             redis: redis client store limit requests if you enable it
         '''
         if config is None:
-            config = {'html': {'htmlmin': True, 'izip': True, 'cache': 'GET-84600'},
+            config = {'html': {'htmlmin': True,  'izip': True, 'cache': 'GET-84600'},
                       'json': {'htmlmin': False, 'izip': True, 'cache': False},
                       'text': {'htmlmin': False, 'izip': True, 'cache': 84600},
                       'limit': [100, 60, 84600],
@@ -41,6 +41,9 @@ class FlaskOptimize(object):
         Elastic optimization and create Cross-site HTTP requests if respond is json
         Args:
             type: respond return type
+                -html
+                -text
+                -json
             htmlmin: None is using global config, True is enable minify html
             izip: None is using global config, True is enable zip respond
             cache: time cache respond. None is using global config, False or 0 to disable cache,
@@ -110,17 +113,18 @@ class FlaskOptimize(object):
 
                 resp = func(*args, **kwargs)
 
-                # crossdomain
-                if type == 'json':
-                    resp = self.crossdomain(resp)
+                if not isinstance(resp, wrappers.Response):
+                    # crossdomain
+                    if type == 'json':
+                        resp = self.crossdomain(resp)
 
-                # min html
-                if htmlmin_arg:
-                    resp = self.validate(minify, resp)
+                    # min html
+                    if htmlmin_arg:
+                        resp = self.validate(minify, resp)
 
-                # gzip
-                if izip_arg:
-                    resp = self.validate(self.zipper, resp)
+                    # gzip
+                    if izip_arg:
+                        resp = self.validate(self.zipper, resp)
 
                 # cache
                 if cache_arg:
@@ -135,6 +139,7 @@ class FlaskOptimize(object):
 
     @staticmethod
     def validate(method, content):
+        print method
         if isinstance(content, (str, unicode)):
             return method(content)
         elif isinstance(content, tuple):
