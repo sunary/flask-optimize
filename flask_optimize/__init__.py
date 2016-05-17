@@ -85,8 +85,9 @@ class FlaskOptimize(object):
                     ban_key = 'ban_' + limit_key
 
                     times_requested = int(self.redis.get(limit_key) or '0')
-                    if times_requested >= limit_arg[0] or (limit_arg[2] and self.redis.get(ban_key)):
+                    if times_requested >= limit_arg[0] or self.redis.get(ban_key):
                         if times_requested >= limit_arg[0]:
+                            self.redis.delete(limit_key)
                             self.redis.set(ban_key, 1)
                             self.redis.expire(ban_key, limit_arg[2])
 
