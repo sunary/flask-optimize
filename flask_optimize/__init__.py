@@ -2,7 +2,7 @@ __author__ = 'sunary'
 
 
 from htmlmin.main import minify
-from flask import request, Response, make_response, current_app, redirect, json, wrappers
+from flask import request, Response, make_response, current_app, redirect, json, wrappers, url_for
 from functools import update_wrapper
 import gzip
 import time
@@ -30,13 +30,14 @@ class FlaskOptimize(object):
                       'json': {'htmlmin': False, 'izip': True, 'cache': False},
                       'text': {'htmlmin': False, 'izip': True, 'cache': 84600},
                       'limit': [100, 60, 84600],
-                      'redirect_host': []}
+                      'redirect_host': [],
+                      'exceed_msg': None}
         config.update(config_update)
 
         self.config = config
         self.redis = redis
 
-    def optimize(self, type='html', htmlmin=None, izip=None, cache=None, limit=False, redirect_host=True):
+    def optimize(self, type='html', htmlmin=None, izip=None, cache=None, limit=False, redirect_host=True, exceed_msg=True):
         ''' Flask optimize respond using minify html, zip content and mem cache.
         Elastic optimization and create Cross-site HTTP requests if respond is json
         Args:
@@ -44,17 +45,24 @@ class FlaskOptimize(object):
                 -html
                 -text
                 -json
-            htmlmin: None is using global config, True is enable minify html
-            izip: None is using global config, True is enable zip respond
-            cache: time cache respond. None is using global config, False or 0 to disable cache,
+            htmlmin: minify html
+                None is using global config, True is enable minify html
+            izip: send content in zip format
+                None is using global config, True is enable zip respond
+            cache: cache content in RAM
+                None is using global config, False or 0 to disable cache,
                 integer value to set time cache (seconds),
                 or string format: 'METHOD-seconds' to select METHOD cache, eg: 'GET-3600'
-            limit: True if you want using default value,
+            limit: limit requests for each windows and set time temporary ban
+                True if you want using default value,
                 using this format [requests, window, ban expire] to set value,
                 False is disable it
-            redirect_host: True if you want using default value,
+            redirect_host: you have 2 or more domains and want redirect all to one
+                True if you want using default value,
                 using this format [['host1', 'host2], 'host_redirect'] to set value,
                 False is disable it
+            exceed_msg: return temporary ban content
+                True if you want using default value,
         Examples:
             @optimize(type='html', htmlmin=True, zip=True, cache='GET-84600')
         '''
@@ -76,6 +84,7 @@ class FlaskOptimize(object):
 
                     limit_arg = self.config['limit'] if (limit is True) else limit
                     redirect_host_arg = self.config['redirect_host'] if (redirect_host is True) else redirect_host
+                    exceed_msg_arg = self.config['exceed_msg'] if (exceed_msg is True) else exceed_msg
                 except:
                     raise 'Wrong input format'
 
@@ -91,7 +100,10 @@ class FlaskOptimize(object):
                             self.redis.set(ban_key, 1)
                             self.redis.expire(ban_key, limit_arg[2])
 
-                        return self.crossdomain({'status_code': 429})
+                        if self.config['redirect_to_func']:
+                            return redirect(url_for(exceed_msg_arg))
+                        else:
+                            return self.crossdomain({'status_code': 429})
                     else:
                         self.redis.incr(limit_key, 1)
                         self.redis.expire(limit_key, limit_arg[1])
