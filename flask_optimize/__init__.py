@@ -90,8 +90,8 @@ class FlaskOptimize(object):
 
                 # limit by ip
                 if limit_arg and self.redis:
-                    limit_key = request.remote_addr
-                    ban_key = 'ban_' + limit_key
+                    limit_key = 'limitip-{}'.format(request.remote_addr)
+                    ban_key = 'banip-{}'.format(request.remote_addr)
 
                     times_requested = int(self.redis.get(limit_key) or '0')
                     if times_requested >= limit_arg[0] or self.redis.get(ban_key):
@@ -100,7 +100,7 @@ class FlaskOptimize(object):
                             self.redis.set(ban_key, 1)
                             self.redis.expire(ban_key, limit_arg[2])
 
-                        if self.config['redirect_to_func']:
+                        if self.config['exceed_msg']:
                             return redirect(url_for(exceed_msg_arg))
                         else:
                             return self.crossdomain({'status_code': 429})
