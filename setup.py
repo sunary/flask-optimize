@@ -17,7 +17,7 @@ with open('LICENSE') as fo:
 with open('CHANGES.md') as fo:
     changes = fo.read()
 
-build = 11
+build = 12
 version = '0.1.{0}'.format(build)
 
 setup(

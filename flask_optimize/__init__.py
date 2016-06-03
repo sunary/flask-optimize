@@ -183,15 +183,18 @@ class FlaskOptimize(object):
     def crossdomain(content):
         ''' create Cross-site HTTP requests
         '''
-        content = json.jsonify(content)
-        resp = make_response(content)
-        h = resp.headers
+        if isinstance(content, json):
+            content = json.jsonify(content)
+            resp = make_response(content)
+            h = resp.headers
 
-        h['Access-Control-Allow-Origin'] = '*'
-        h['Access-Control-Allow-Methods'] = current_app.make_default_options_response().headers['allow']
-        h['Access-Control-Max-Age'] = '21600'
+            h['Access-Control-Allow-Origin'] = '*'
+            h['Access-Control-Allow-Methods'] = current_app.make_default_options_response().headers['allow']
+            h['Access-Control-Max-Age'] = '21600'
 
-        return resp
+            return resp
+
+        return content
 
 
 if __name__ == '__main__':
