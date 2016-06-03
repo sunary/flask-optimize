@@ -183,7 +183,7 @@ class FlaskOptimize(object):
     def crossdomain(content):
         ''' create Cross-site HTTP requests
         '''
-        if isinstance(content, json):
+        if isinstance(content, dict):
             content = json.jsonify(content)
             resp = make_response(content)
             h = resp.headers
