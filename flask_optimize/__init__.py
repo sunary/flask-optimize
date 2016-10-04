@@ -86,7 +86,7 @@ class FlaskOptimize(object):
                     redirect_host_arg = self.config['redirect_host'] if (redirect_host is True) else redirect_host
                     exceed_msg_arg = self.config['exceed_msg'] if (exceed_msg is True) else exceed_msg
                 except:
-                    raise 'Wrong input format'
+                    raise Exception('Wrong input format')
 
                 # limit by ip
                 if limit_arg and self.redis:

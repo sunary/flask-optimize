@@ -25,3 +25,7 @@ def index():
 ```shell
 pip install flask-optimize
 ```
+
+## Requirements: ##
+* Python 2.x
+* Python 3.x
