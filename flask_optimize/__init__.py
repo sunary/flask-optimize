@@ -18,9 +18,10 @@ class FlaskOptimize(object):
     _cache = {}
     _timestamp = {}
 
-    def __init__(self, config=None, config_update={}, redis=None):
+    def __init__(self, app=None, config=None, config_update={}, redis=None):
         ''' Global config for flask optimize foreach respond return type
         Args:
+            app: flask app object
             config: global configure values
             config_update: update into default configure
             redis: redis client store limit requests if you enable it
@@ -36,6 +37,41 @@ class FlaskOptimize(object):
 
         self.config = config
         self.redis = redis
+        self.app = app
+
+        if app is not None:
+            self.init_app(app)
+
+    def init_app(self, app):
+        if app.config.get('OPTIMIZE_ALL_RESPONSE'):
+            app.after_request(self.after_request)
+
+    def after_request(self, response, type='html', htmlmin=None, izip=None):
+        response.direct_passthrough = False
+
+        app = self.app or current_app
+        load_config = self.config[type]
+
+        htmlmin_arg = load_config['htmlmin'] if (htmlmin is None) else htmlmin
+        izip_arg = load_config['izip'] if (izip is None) else izip
+
+        # crossdomain
+        if response.mimetype == 'application/json':
+            response = self.crossdomain(response)
+
+        # min html
+        if htmlmin_arg:
+            try:
+                content = response.data.decode('utf8')
+                response.data = self.validate(minify, content).encode('utf8')
+            except:
+                pass
+
+        # gzip
+        if izip_arg:
+            response = self.validate(self.zipper, response)
+
+        return response
 
     def optimize(self, type='html', htmlmin=None, izip=None, cache=None, limit=False, redirect_host=True, exceed_msg=True):
         ''' Flask optimize respond using minify html, zip content and mem cache.
@@ -152,7 +188,7 @@ class FlaskOptimize(object):
 
     @staticmethod
     def validate(method, content):
-        if isinstance(content, (str, unicode)):
+        if isinstance(content, (str, unicode, Response)):
             return method(content)
         elif isinstance(content, tuple):
             return method(content[0]), content[1]
@@ -163,10 +199,14 @@ class FlaskOptimize(object):
     def zipper(content):
         ''' Zip str, unicode type content
         '''
+        resp = Response()
+        if isinstance(content, Response):
+            resp = content
+            content = resp.data
+
         if isinstance(content, unicode):
             content = content.encode('utf8')
 
-        resp = Response()
         gzip_buffer = StringIO()
         gzip_file = gzip.GzipFile(mode='wb', fileobj=gzip_buffer)
         gzip_file.write(content)
@@ -183,11 +223,15 @@ class FlaskOptimize(object):
     def crossdomain(content):
         ''' create Cross-site HTTP requests
         '''
-        if isinstance(content, dict):
-            content = json.jsonify(content)
-            resp = make_response(content)
-            h = resp.headers
+        if isinstance(content, (dict, Response)):
+            if isinstance(content, dict):
+                content = json.jsonify(content)
+                resp = make_response(content)
 
+            if isinstance(content, Response):
+                resp = content
+
+            h = resp.headers
             h['Access-Control-Allow-Origin'] = '*'
             h['Access-Control-Allow-Methods'] = current_app.make_default_options_response().headers['allow']
             h['Access-Control-Max-Age'] = '21600'
