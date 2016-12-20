@@ -3,6 +3,7 @@ __author__ = 'sunary'
 
 import os
 from setuptools import setup, find_packages
+from flask_optimize import VERSION
 
 
 def __path(filename):
@@ -17,12 +18,10 @@ with open('LICENSE') as fo:
 with open('CHANGES.md') as fo:
     changes = fo.read()
 
-build = 13
-version = '0.1.{0}'.format(build)
 
 setup(
     name='flask-optimize',
-    version=version,
+    version=VERSION,
     author='Sunary [Nhat Vo Van]',
     author_email='v2nhat@gmail.com',
     maintainer='Sunary [Nhat Vo Van]',
