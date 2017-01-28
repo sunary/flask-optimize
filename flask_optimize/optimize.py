@@ -66,7 +66,7 @@ class FlaskOptimize(object):
                     content = response.data.decode('utf8')
                     response.data = self.validate(minify, content).encode('utf8')
                 except UnicodeDecodeError:
-                    print 'response UnicodeDecodeError'
+                    print('response UnicodeDecodeError')
 
         # gzip
         if izip_arg:
