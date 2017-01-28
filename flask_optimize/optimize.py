@@ -49,23 +49,24 @@ class FlaskOptimize(object):
     def after_request(self, response, type='html', htmlmin=None, izip=None):
         response.direct_passthrough = False
 
-        app = self.app or current_app
+        self.app = self.app or current_app
         load_config = self.config[type]
 
         htmlmin_arg = load_config['htmlmin'] if (htmlmin is None) else htmlmin
         izip_arg = load_config['izip'] if (izip is None) else izip
 
-        # crossdomain
-        if response.mimetype == 'application/json':
-            response = self.crossdomain(response)
+        if isinstance(response, Response):
+            # crossdomain
+            if 'application/json' in response.mimetype:
+                response = self.crossdomain(response)
 
-        # min html
-        if htmlmin_arg:
-            try:
-                content = response.data.decode('utf8')
-                response.data = self.validate(minify, content).encode('utf8')
-            except:
-                pass
+            # min html
+            if htmlmin_arg:
+                try:
+                    content = response.data.decode('utf8')
+                    response.data = self.validate(minify, content).encode('utf8')
+                except UnicodeDecodeError:
+                    print 'response UnicodeDecodeError'
 
         # gzip
         if izip_arg:
@@ -191,6 +192,9 @@ class FlaskOptimize(object):
         if isinstance(content, (str, unicode, Response)):
             return method(content)
         elif isinstance(content, tuple):
+            if len(content) < 2:
+                raise Exception('Content must have larger 2 elements')
+
             return method(content[0]), content[1]
 
         return content
@@ -227,8 +231,7 @@ class FlaskOptimize(object):
             if isinstance(content, dict):
                 content = json.jsonify(content)
                 resp = make_response(content)
-
-            if isinstance(content, Response):
+            elif isinstance(content, Response):
                 resp = content
 
             h = resp.headers
