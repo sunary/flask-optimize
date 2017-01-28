@@ -13,9 +13,8 @@ from flask import Flask
 from flask_optimize import FlaskOptimize
 
 flask_app = Flask(__name__)
-app.config['OPTIMIZE_ALL_RESPONSE'] = True    # switch by this option
-flask_optimize = FlaskOptimize()
-flask_optimize.init_app(app)  # full mode
+flask_app.config['OPTIMIZE_ALL_RESPONSE'] = True    # switch by this option
+flask_optimize = FlaskOptimize(flask_app)
 
 @flask_app.route('/')
 @flask_optimize.optimize()  # view mode
