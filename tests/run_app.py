@@ -1,7 +1,7 @@
 __author__ = 'sunary'
 
 
-from flask_optimize.optimize import FlaskOptimize
+from flask_optimize import FlaskOptimize
 from flask import Flask, request, render_template
 import time
 
