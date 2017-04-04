@@ -37,51 +37,23 @@ class FlaskOptimize(object):
 
         self.config = config
         self.redis = redis
-        self.app = app
+        self.app = app or current_app
 
-        if app is not None:
-            self.init_app(app)
-
-    def init_app(self, app):
-        if app.config.get('OPTIMIZE_ALL_RESPONSE'):
-            app.after_request(self.after_request)
-
-    def after_request(self, response, type='html', htmlmin=None, izip=None):
-        response.direct_passthrough = False
-
-        self.app = self.app or current_app
-        load_config = self.config[type]
-
-        htmlmin_arg = load_config['htmlmin'] if (htmlmin is None) else htmlmin
-        izip_arg = load_config['izip'] if (izip is None) else izip
-
-        if isinstance(response, Response):
-            # crossdomain
-            if 'application/json' in response.mimetype:
-                response = self.crossdomain(response)
-
-            # min html
-            if htmlmin_arg:
-                try:
-                    content = response.data.decode('utf8')
-                    response.data = self.validate(minify, content).encode('utf8')
-                except UnicodeDecodeError:
-                    print('response UnicodeDecodeError')
-
-        # gzip
-        if izip_arg:
-            response = self.validate(self.zipper, response)
-
-        return response
-
-    def optimize(self, type='html', htmlmin=None, izip=None, cache=None, limit=False, redirect_host=True, exceed_msg=True):
+    def optimize(self,
+                 dtype='html',
+                 htmlmin=None,
+                 izip=None,
+                 cache=None,
+                 limit=False,
+                 redirect_host=True,
+                 exceed_msg=True):
         ''' Flask optimize respond using minify html, zip content and mem cache.
         Elastic optimization and create Cross-site HTTP requests if respond is json
         Args:
-            type: respond return type
-                -html
-                -text
-                -json
+            dtype: data type of response:
+                - `html` (default)
+                - `text`
+                - `json`
             htmlmin: minify html
                 None is using global config, True is enable minify html
             izip: send content in zip format
@@ -101,14 +73,14 @@ class FlaskOptimize(object):
             exceed_msg: return temporary ban content
                 True if you want using default value,
         Examples:
-            @optimize(type='html', htmlmin=True, zip=True, cache='GET-84600')
+            @optimize(dtype='html', htmlmin=True, zip=True, cache='GET-84600')
         '''
 
         def _decorating_wrapper(func):
 
             def _optimize_wrapper(*args, **kwargs):
                 try:
-                    load_config = self.config[type]
+                    load_config = self.config[dtype]
 
                     htmlmin_arg = load_config['htmlmin'] if (htmlmin is None) else htmlmin
                     izip_arg = load_config['izip'] if (izip is None) else izip
@@ -165,12 +137,12 @@ class FlaskOptimize(object):
 
                 if not isinstance(resp, wrappers.Response):
                     # crossdomain
-                    if type == 'json':
+                    if dtype == 'json':
                         resp = self.crossdomain(resp)
 
                     # min html
                     if htmlmin_arg:
-                        resp = self.validate(minify, resp)
+                        resp = self.validate(self.minifier, resp)
 
                     # gzip
                     if izip_arg:
@@ -200,8 +172,15 @@ class FlaskOptimize(object):
         return content
 
     @staticmethod
+    def minifier(content):
+        if isinstance(content, str):
+            content = unicode(content, 'utf-8')
+
+        return minify(content)
+
+    @staticmethod
     def zipper(content):
-        ''' Zip str, unicode type content
+        ''' Zip str, unicode content
         '''
         resp = Response()
         if isinstance(content, Response):

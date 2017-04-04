@@ -7,7 +7,6 @@ import time
 
 
 flask_app = Flask(__name__)
-flask_app.config['OPTIMIZE_ALL_RESPONSE'] = True    # switch by this option
 flask_optimize = FlaskOptimize(flask_app)
 
 
@@ -15,6 +14,34 @@ flask_optimize = FlaskOptimize(flask_app)
 @flask_optimize.optimize()
 def index():
     return 'Using flask-optimize'
+
+
+@flask_app.route('/html')
+@flask_optimize.optimize()
+def html():
+    return '''
+    <html>
+    <body>
+    The content of the body element is displayed in your browser.
+    </body>
+    </html>
+    '''
+
+@flask_app.route('/text')
+@flask_optimize.optimize('text')
+def text():
+    return '''
+    <html>
+    <body>
+    Data type response is text, so this content wasn't minified
+    </body>
+    </html>
+    '''
+
+@flask_app.route('/json')
+@flask_optimize.optimize('json')
+def json():
+    return {'text': 'anything', 'other_values': [1, 2, 3, 4]}
 
 
 @flask_app.route('/load_svg')
