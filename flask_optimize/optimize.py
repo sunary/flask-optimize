@@ -176,7 +176,8 @@ class FlaskOptimize(object):
         if isinstance(content, str):
             content = unicode(content, 'utf-8')
 
-        return minify(content)
+        return minify(content,
+                      remove_comments=True, reduce_empty_attributes=True, remove_optional_attribute_quotes=False)
 
     @staticmethod
     def zipper(content):
