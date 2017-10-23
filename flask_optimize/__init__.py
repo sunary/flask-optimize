@@ -1,6 +1,6 @@
 __author__ = 'sunary'
 
 
-VERSION = '0.2.5'
+VERSION = '0.2.7'
 
-from optimize import FlaskOptimize
+from .optimize import FlaskOptimize
