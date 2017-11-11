@@ -1,16 +1,20 @@
 __author__ = 'sunary'
 
 
+import sys
 from htmlmin.main import minify
 from flask import request, Response, make_response, current_app, redirect, json, wrappers, url_for
 from functools import update_wrapper
 import gzip
 import time
 
-try:
+
+IS_PYTHON_3 = True
+if sys.version_info[0] < 3:
     from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+    IS_PYTHON_3 = False
+else:
+    from io import BytesIO
 
 
 class FlaskOptimize(object):
@@ -161,7 +165,8 @@ class FlaskOptimize(object):
 
     @staticmethod
     def validate(method, content):
-        if isinstance(content, (str, unicode, Response)):
+        instances_compare = (str, Response) if IS_PYTHON_3 else (str, unicode, Response)
+        if isinstance(content, instances_compare):
             return method(content)
         elif isinstance(content, tuple):
             if len(content) < 2:
@@ -173,7 +178,7 @@ class FlaskOptimize(object):
 
     @staticmethod
     def minifier(content):
-        if isinstance(content, str):
+        if not IS_PYTHON_3 and isinstance(content, str):
             content = unicode(content, 'utf-8')
 
         return minify(content,
@@ -188,12 +193,18 @@ class FlaskOptimize(object):
             resp = content
             content = resp.data
 
-        if isinstance(content, unicode):
+        if not IS_PYTHON_3 and isinstance(content, unicode):
             content = content.encode('utf8')
 
-        gzip_buffer = StringIO()
-        gzip_file = gzip.GzipFile(mode='wb', fileobj=gzip_buffer)
-        gzip_file.write(content)
+        if IS_PYTHON_3:
+            gzip_buffer = BytesIO()
+            gzip_file = gzip.GzipFile(fileobj=gzip_buffer, mode='wb')
+            gzip_file.write(bytes(content, 'utf-8'))
+        else:
+            gzip_buffer = StringIO()
+            gzip_file = gzip.GzipFile(fileobj=gzip_buffer, mode='wb')
+            gzip_file.write(content)
+
         gzip_file.close()
 
         resp.data = gzip_buffer.getvalue()
