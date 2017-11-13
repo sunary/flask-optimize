@@ -121,7 +121,7 @@ if __name__ == '__main__':
 ```shell
 pip install flask-optimize
 ```
-For python 3, You need manual install because the new version is not publish yet to [pypi](https://pypi.python.org/pypi)
+For python 3, You need manual install because the new version is not published yet to [pypi](https://pypi.python.org/pypi)
 
 ## Requirements: ##
 
