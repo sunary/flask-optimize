@@ -15,11 +15,11 @@ https://pypi.python.org/pypi/flask-optimize
 
 Default:
 
-```json
+```python
 {
-    "html": {"htmlmin": True,  "compress": True, "cache": "GET-84600"},
-    "json": {"htmlmin": False, "compress": True, "cache": False},
-    "text": {"htmlmin": False, "compress": True, "cache": 84600}
+    'html': {'htmlmin': True,  'compress': True, 'cache': 'GET-84600'},
+    'json': {'htmlmin': False, 'compress': True, 'cache': False},
+    'text': {'htmlmin': False, 'compress': True, 'cache': 'GET-600'}
 }
 ```
 

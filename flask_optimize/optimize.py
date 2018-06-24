@@ -35,7 +35,7 @@ class FlaskOptimize(object):
             config = {
                         'html': {'htmlmin': True,  'compress': True, 'cache': 'GET-84600'},
                         'json': {'htmlmin': False, 'compress': True, 'cache': False},
-                        'text': {'htmlmin': False, 'compress': True, 'cache': 84600}
+                        'text': {'htmlmin': False, 'compress': True, 'cache': 'GET-84600'}
                      }
 
         self.config = config
@@ -65,6 +65,7 @@ class FlaskOptimize(object):
             cache: cache content in RAM
                 None (default): using global config,
                 False: disable cache,
+                integer: cache all method with period
                 string value: 'METHOD-seconds' to select METHOD and period cache, eg: 'GET-3600', 'GET|POST-600', ...
         Examples:
             @optimize(dtype='html', htmlmin=True, compress=True, cache='GET-84600')
@@ -85,13 +86,15 @@ class FlaskOptimize(object):
 
                     if cache is False or cache == 0:
                         period_cache = 0
+                    elif isinstance(cache_agrs, int):
+                        period_cache = cache_agrs
                     elif isinstance(cache_agrs, (str, basestring)) and len(cache_agrs.split('-')) == 2:
                         try:
                             period_cache = int(cache_agrs.split('-')[1]) if (request.method in cache_agrs) else 0
                         except (KeyError, ValueError):
                             raise ValueError('Cache must be string with method and period cache split by "-"')
                     else:
-                        raise ValueError('Cache must be False or string with method and period cache split by "-"')
+                        raise ValueError('Cache must be False, int or string with method and period cache split by "-"')
 
                 # init cached data
                 now = time.time()
