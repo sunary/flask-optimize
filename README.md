@@ -17,22 +17,13 @@ Default:
 
 ```json
 {
-    "html": {"htmlmin": True,  "izip": True, "cache": "GET-84600"},
-    "json": {"htmlmin": False, "izip": True, "cache": False},
-    "text": {"htmlmin": False, "izip": True, "cache": 84600},
-    "limit": [100, 60, 84600],
-    "redirect_host": [],
-    "exceed_msg": None
+    "html": {"htmlmin": True,  "compress": True, "cache": "GET-84600"},
+    "json": {"htmlmin": False, "compress": True, "cache": False},
+    "text": {"htmlmin": False, "compress": True, "cache": 84600}
 }
 ```
 
 `html`, `json`, `text`: keys for data type of response, see detail below
-
-`limit`: [number requests, in period time (seconds), abandon timeout if exceed (seconds)], require `redis`
-
-`redirect_host`: [['other-domain1.com', 'other-domain2.com'], 'home.com'] redirect other domains to one
-
-`exceed_msg`: (default return {'status_code': 429}) route in exceed message case 
 
 **config_update:** update into default global config
 
@@ -52,11 +43,11 @@ True: enable minify html
 False: disable
 ```
 
-**izip:** Override `izip` in config by key **dtype**
+**compress:** Override `compress` in config by key **dtype**
 
 ```
 None: using default value from global config
-True: enable zip content
+True: enable compress content (using gzip)
 False: disable
 ```
 
@@ -65,7 +56,6 @@ False: disable
 ```
 None: using default value from global config
 GET-84600: enable for GET method only, cached time is 84600 seconds
-84600: enable, cached time is 84600 seconds
 False: disable
 ```
 
@@ -121,7 +111,6 @@ if __name__ == '__main__':
 ```shell
 pip install flask-optimize
 ```
-For python 3, You need manual install because the new version is not published yet to [pypi](https://pypi.python.org/pypi)
 
 ## Requirements: ##
 

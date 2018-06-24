@@ -75,12 +75,12 @@ class FlaskOptimize(object):
             def _optimize_wrapper(*args, **kwargs):
                 # default values:
                 is_htmlmin = False
-                is_comress = False
+                is_compress = False
                 period_cache = 0
 
                 if self.config.get(dtype):
                     is_htmlmin = self.config.get(dtype)['htmlmin'] if (htmlmin is None) else htmlmin
-                    is_comress = self.config.get(dtype)['compress'] if (compress is None) else compress
+                    is_compress = self.config.get(dtype)['compress'] if (compress is None) else compress
                     cache_agrs = self.config.get(dtype)['cache'] if (cache is None) else cache
 
                     if cache is False or cache == 0:
@@ -112,7 +112,7 @@ class FlaskOptimize(object):
                         resp = self.validate(self.minifier, resp)
 
                     # compress
-                    if is_comress:
+                    if is_compress:
                         resp = self.validate(self.compress, resp)
 
                 # cache
