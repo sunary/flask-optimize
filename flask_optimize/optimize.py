@@ -2,11 +2,11 @@ __author__ = 'sunary'
 
 
 import sys
+import gzip
+import time
 from htmlmin.main import minify
 from flask import request, Response, make_response, current_app, json, wrappers
 from functools import update_wrapper
-import gzip
-import time
 
 
 IS_PYTHON_3 = True
@@ -27,14 +27,14 @@ class FlaskOptimize(object):
         """
         Global config for flask optimize foreach respond return type
         Args:
-            app: flask app object
             config: global configure values
         """
         if config is None:
             config = {
                         'html': {'htmlmin': True,  'compress': True, 'cache': 'GET-84600'},
                         'json': {'htmlmin': False, 'compress': True, 'cache': False},
-                        'text': {'htmlmin': False, 'compress': True, 'cache': 'GET-84600'}
+                        'text': {'htmlmin': False, 'compress': True, 'cache': 'GET-84600'},
+                        'trim_fragment': False,
                      }
 
         self.config = config
@@ -97,6 +97,8 @@ class FlaskOptimize(object):
                 # init cached data
                 now = time.time()
                 key_cache = request.url
+                if self.config.get('trim_fragment'):
+                    key_cache = key_cache.split('#')[0]
 
                 if self._timestamp.get(key_cache) > now:
                     return self._cache[key_cache]
