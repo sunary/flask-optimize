@@ -23,7 +23,6 @@ class FlaskOptimize(object):
     _timestamp = {}
 
     def __init__(self,
-                 app=None,
                  config=None):
         """
         Global config for flask optimize foreach respond return type
@@ -39,7 +38,6 @@ class FlaskOptimize(object):
                      }
 
         self.config = config
-        self.app = app or current_app
 
     def optimize(self,
                  dtype='html',
