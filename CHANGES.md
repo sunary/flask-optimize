@@ -1,2 +1,3 @@
 - 2016/04/28 -- Initial project
 - 2016/12/20 -- Support optimize all response
+- 2018/06/24 -- Remove unnecessary code

@@ -3,7 +3,7 @@ __author__ = 'sunary'
 
 import sys
 from htmlmin.main import minify
-from flask import request, Response, make_response, current_app, redirect, json, wrappers, url_for
+from flask import request, Response, make_response, current_app, json, wrappers
 from functools import update_wrapper
 import gzip
 import time
@@ -22,120 +22,83 @@ class FlaskOptimize(object):
     _cache = {}
     _timestamp = {}
 
-    def __init__(self, app=None, config=None, config_update={}, redis=None):
-        ''' Global config for flask optimize foreach respond return type
+    def __init__(self,
+                 app=None,
+                 config=None):
+        """
+        Global config for flask optimize foreach respond return type
         Args:
             app: flask app object
             config: global configure values
-            config_update: update into default configure
-            redis: redis client store limit requests if you enable it
-        '''
+        """
         if config is None:
-            config = {'html': {'htmlmin': True,  'izip': True, 'cache': 'GET-84600'},
-                      'json': {'htmlmin': False, 'izip': True, 'cache': False},
-                      'text': {'htmlmin': False, 'izip': True, 'cache': 84600},
-                      'limit': [100, 60, 84600],
-                      'redirect_host': [],
-                      'exceed_msg': None}
-        config.update(config_update)
+            config = {
+                        'html': {'htmlmin': True,  'compress': True, 'cache': 'GET-84600'},
+                        'json': {'htmlmin': False, 'compress': True, 'cache': False},
+                        'text': {'htmlmin': False, 'compress': True, 'cache': 84600}
+                     }
 
         self.config = config
-        self.redis = redis
         self.app = app or current_app
 
     def optimize(self,
                  dtype='html',
                  htmlmin=None,
-                 izip=None,
-                 cache=None,
-                 limit=False,
-                 redirect_host=True,
-                 exceed_msg=True):
-        ''' Flask optimize respond using minify html, zip content and mem cache.
+                 compress=None,
+                 cache=None):
+        """
+        Flask optimize respond using minify html, zip content and mem cache.
         Elastic optimization and create Cross-site HTTP requests if respond is json
         Args:
-            dtype: data type of response:
+            dtype: response type:
                 - `html` (default)
                 - `text`
                 - `json`
             htmlmin: minify html
-                None is using global config, True is enable minify html
-            izip: send content in zip format
-                None is using global config, True is enable zip respond
+                None (default): using global config,
+                False: disable minify html
+                True: enable minify html
+            compress: send content in compress (gzip) format
+                None (default): using global config,
+                False: disable compress response,
+                True: enable compress response
             cache: cache content in RAM
-                None is using global config, False or 0 to disable cache,
-                integer value to set time cache (seconds),
-                or string format: 'METHOD-seconds' to select METHOD cache, eg: 'GET-3600'
-            limit: limit requests for each windows and set time temporary ban
-                True if you want using default value,
-                using this format [requests, window, ban expire] to set value,
-                False is disable it
-            redirect_host: you have 2 or more domains and want redirect all to one
-                True if you want using default value,
-                using this format [['host1', 'host2], 'host_redirect'] to set value,
-                False is disable it
-            exceed_msg: return temporary ban content
-                True if you want using default value,
+                None (default): using global config,
+                False: disable cache,
+                string value: 'METHOD-seconds' to select METHOD and period cache, eg: 'GET-3600', 'GET|POST-600', ...
         Examples:
-            @optimize(dtype='html', htmlmin=True, zip=True, cache='GET-84600')
-        '''
+            @optimize(dtype='html', htmlmin=True, compress=True, cache='GET-84600')
+        """
 
         def _decorating_wrapper(func):
 
             def _optimize_wrapper(*args, **kwargs):
-                try:
-                    load_config = self.config[dtype]
+                # default values:
+                is_htmlmin = False
+                is_comress = False
+                period_cache = 0
 
-                    htmlmin_arg = load_config['htmlmin'] if (htmlmin is None) else htmlmin
-                    izip_arg = load_config['izip'] if (izip is None) else izip
-                    cache_arg = load_config['cache'] if (cache is None) else cache
+                if self.config.get(dtype):
+                    is_htmlmin = self.config.get(dtype)['htmlmin'] if (htmlmin is None) else htmlmin
+                    is_comress = self.config.get(dtype)['compress'] if (compress is None) else compress
+                    cache_agrs = self.config.get(dtype)['cache'] if (cache is None) else cache
 
-                    if isinstance(cache_arg, str) and request.method in cache_arg:
-                        cache_arg = int(cache_arg.split('-')[1])
-                    elif not isinstance(cache_arg, int):
-                        cache_arg = 0
-
-                    limit_arg = self.config['limit'] if (limit is True) else limit
-                    redirect_host_arg = self.config['redirect_host'] if (redirect_host is True) else redirect_host
-                    exceed_msg_arg = self.config['exceed_msg'] if (exceed_msg is True) else exceed_msg
-                except:
-                    raise Exception('Wrong input format')
-
-                # limit by ip
-                if limit_arg and self.redis:
-                    limit_key = 'limitip-{}'.format(request.remote_addr)
-                    ban_key = 'banip-{}'.format(request.remote_addr)
-
-                    times_requested = int(self.redis.get(limit_key) or '0')
-                    if times_requested >= limit_arg[0] or self.redis.get(ban_key):
-                        if times_requested >= limit_arg[0]:
-                            self.redis.delete(limit_key)
-                            self.redis.set(ban_key, 1)
-                            self.redis.expire(ban_key, limit_arg[2])
-
-                        if self.config['exceed_msg']:
-                            return redirect(url_for(exceed_msg_arg))
-                        else:
-                            return self.crossdomain({'status_code': 429})
+                    if cache is False or cache == 0:
+                        period_cache = 0
+                    elif isinstance(cache_agrs, (str, basestring)) and len(cache_agrs.split('-')) == 2:
+                        try:
+                            period_cache = int(cache_agrs.split('-')[1]) if (request.method in cache_agrs) else 0
+                        except (KeyError, ValueError):
+                            raise ValueError('Cache must be string with method and period cache split by "-"')
                     else:
-                        self.redis.incr(limit_key, 1)
-                        self.redis.expire(limit_key, limit_arg[1])
+                        raise ValueError('Cache must be False or string with method and period cache split by "-"')
 
-                # redirect new host
-                if redirect_host_arg:
-                    for host in redirect_host_arg[0]:
-                        if host in request.url_root:
-                            redirect_url = request.url
-                            redirect_url = redirect_url.replace(host, redirect_host_arg[1])
-                            return redirect(redirect_url)
+                # init cached data
+                now = time.time()
+                key_cache = request.url
 
-                # find cached value
-                if cache_arg:
-                    now = time.time()
-                    key_cache = request.url
-
-                    if self._timestamp.get(key_cache, now) > now:
-                        return self._cache[key_cache]
+                if self._timestamp.get(key_cache) > now:
+                    return self._cache[key_cache]
 
                 resp = func(*args, **kwargs)
 
@@ -145,17 +108,17 @@ class FlaskOptimize(object):
                         resp = self.crossdomain(resp)
 
                     # min html
-                    if htmlmin_arg:
+                    if is_htmlmin:
                         resp = self.validate(self.minifier, resp)
 
-                    # gzip
-                    if izip_arg:
-                        resp = self.validate(self.zipper, resp)
+                    # compress
+                    if is_comress:
+                        resp = self.validate(self.compress, resp)
 
                 # cache
-                if cache_arg:
+                if period_cache > 0:
                     self._cache[key_cache] = resp
-                    self._timestamp[key_cache] = now + cache_arg
+                    self._timestamp[key_cache] = now + period_cache
 
                 return resp
 
@@ -170,7 +133,7 @@ class FlaskOptimize(object):
             return method(content)
         elif isinstance(content, tuple):
             if len(content) < 2:
-                raise Exception('Content must have larger 2 elements')
+                raise TypeError('Content must have larger than 2 elements')
 
             return method(content[0]), content[1]
 
@@ -182,12 +145,15 @@ class FlaskOptimize(object):
             content = unicode(content, 'utf-8')
 
         return minify(content,
-                      remove_comments=True, reduce_empty_attributes=True, remove_optional_attribute_quotes=False)
+                      remove_comments=True,
+                      reduce_empty_attributes=True,
+                      remove_optional_attribute_quotes=False)
 
     @staticmethod
-    def zipper(content):
-        ''' Zip str, unicode content
-        '''
+    def compress(content):
+        """
+        Compress str, unicode content using gzip
+        """
         resp = Response()
         if isinstance(content, Response):
             resp = content
@@ -216,8 +182,10 @@ class FlaskOptimize(object):
 
     @staticmethod
     def crossdomain(content):
-        ''' create Cross-site HTTP requests
-        '''
+        """
+        Create decorator Cross-site HTTP requests
+        see more at: http://flask.pocoo.org/snippets/56/
+        """
         if isinstance(content, (dict, Response)):
             if isinstance(content, dict):
                 content = json.jsonify(content)
