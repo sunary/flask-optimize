@@ -2,8 +2,7 @@
 
 [![Build Status](https://travis-ci.org/sunary/flask-optimize.svg?branch=master)](https://travis-ci.org/sunary/flask-optimize)
 
-- **Flask optimization using cache, minify html and gzip response**
-- **Support limit decorator, redirect host and cross-site HTTP**
+**Flask optimization using cache, minify html and compress response**
 
 https://pypi.python.org/pypi/flask-optimize
 
@@ -39,24 +38,25 @@ Default:
 
 ```
 None: using default value from global config
-True: enable minify html
 False: disable
+True: enable minify html
 ```
 
 **compress:** Override `compress` in config by key **dtype**
 
 ```
 None: using default value from global config
-True: enable compress content (using gzip)
 False: disable
+True: enable compress content (using gzip)
 ```
 
 **cache:** Override `cache` in config by key **dtype**
 
 ```
 None: using default value from global config
-GET-84600: enable for GET method only, cached time is 84600 seconds
 False: disable
+integer value: enable all method, value is cached period (seconds)
+GET-84600: enable for GET method only, cached period is 84600 seconds
 ```
 
 
