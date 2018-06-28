@@ -86,7 +86,8 @@ class FlaskOptimize(object):
                         period_cache = 0
                     elif isinstance(cache_agrs, int):
                         period_cache = cache_agrs
-                    elif isinstance(cache_agrs, (str, basestring)) and len(cache_agrs.split('-')) == 2:
+                    elif isinstance(cache_agrs, str if IS_PYTHON_3 else (str, basestring)) and\
+                            len(cache_agrs.split('-')) == 2:
                         try:
                             period_cache = int(cache_agrs.split('-')[1]) if (request.method in cache_agrs) else 0
                         except (KeyError, ValueError):
