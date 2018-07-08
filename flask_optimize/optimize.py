@@ -101,7 +101,7 @@ class FlaskOptimize(object):
                 if self.config.get('trim_fragment'):
                     key_cache = key_cache.split('#')[0]
 
-                if self._timestamp.get(key_cache) > now:
+                if self._timestamp.get(key_cache) and self._timestamp.get(key_cache) > now:
                     return self._cache[key_cache]
 
                 resp = func(*args, **kwargs)
