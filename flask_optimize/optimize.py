@@ -82,7 +82,7 @@ class FlaskOptimize(object):
                     is_compress = self.config.get(dtype)['compress'] if (compress is None) else compress
                     cache_agrs = self.config.get(dtype)['cache'] if (cache is None) else cache
 
-                    if cache is False or cache == 0:
+                    if cache_agrs is False or cache_agrs == 0:
                         period_cache = 0
                     elif isinstance(cache_agrs, int):
                         period_cache = cache_agrs
