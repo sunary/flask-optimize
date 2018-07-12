@@ -97,7 +97,7 @@ class FlaskOptimize(object):
 
                 # init cached data
                 now = time.time()
-                key_cache = request.url
+                key_cache = request.method + request.url
                 if self.config.get('trim_fragment'):
                     key_cache = key_cache.split('#')[0]
 
